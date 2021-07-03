@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="6 PD and P-value | Bayesian Regression" />
+<meta property="og:type" content="book" />
+
+
+
+
+
+<meta name="author" content="Cory Whitney" />
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<meta name="description" content="6 PD and P-value | Bayesian Regression">
+
+<title>6 PD and P-value | Bayesian Regression</title>
+
+<script src="libs/header-attrs-2.7/header-attrs.js"></script>
+<script src="libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="libs/navigation-1.1/tabsets.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container-fluid main-container">
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li><a href="1-bayesian-regression.html#bayesian-regression"><span class="toc-section-number">1</span> Bayesian regression</a></li>
+<li><a href="2-data-preparation.html#data-preparation"><span class="toc-section-number">2</span> Data preparation</a></li>
+<li><a href="3-classical-linear-regression-model.html#classical-linear-regression-model"><span class="toc-section-number">3</span> Classical linear regression model</a></li>
+<li><a href="4-bayesian-regression-1.html#bayesian-regression-1"><span class="toc-section-number">4</span> Bayesian regression</a></li>
+<li><a href="5-bayesian-inferences.html#bayesian-inferences"><span class="toc-section-number">5</span> Bayesian inferences</a></li>
+<li><a href="6-pd-and-p-value.html#pd-and-p-value"><span class="toc-section-number">6</span> PD and P-value</a></li>
+<li><a href="7-credit.html#credit"><span class="toc-section-number">7</span> credit</a></li>
+<li><a href="8-references.html#references"><span class="toc-section-number">8</span> References</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="pd-and-p-value" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> PD and P-value</h1>
+<p>Sometimes we are only interested to check the direction of the coefficient (positive or negative). this is the role of pd statistic in the above table, high value means that the associated effect is concentrated on the same side as the median. For our model, since pd’s equal to 1, almost all the posteriors of the two variables age and <code>chas1</code> and the intercept are on the same side (if median negative all other values are negatives). However, it should be noted that this statistic does not assess the significance of the effect. Something more important to mention is that it exists a strong relation between this probability and the p-value approximated as follows: <span class="math inline">\(𝑝−𝑣𝑎𝑙𝑢𝑒=1−𝑝𝑑\)</span>. let’s check this with our variables.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="6-pd-and-p-value.html#cb29-1" aria-hidden="true" tabindex="-1"></a>df1 <span class="ot">&lt;-</span>dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">tidy</span>(model_freq), <span class="fu">c</span>(term,p.value))</span>
+<span id="cb29-2"><a href="6-pd-and-p-value.html#cb29-2" aria-hidden="true" tabindex="-1"></a>df1<span class="sc">$</span>p.value <span class="ot">&lt;-</span> <span class="fu">round</span>(df1<span class="sc">$</span>p.value, <span class="at">digits =</span> <span class="dv">3</span>)</span>
+<span id="cb29-3"><a href="6-pd-and-p-value.html#cb29-3" aria-hidden="true" tabindex="-1"></a>df2 <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">-</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(post, p_direction)</span>
+<span id="cb29-4"><a href="6-pd-and-p-value.html#cb29-4" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">cbind</span>(df1,df2)</span></code></pre></div>
+</div>
+<p style="text-align: center;">
+<a href="5-bayesian-inferences.html"><button class="btn btn-default">Previous</button></a>
+<a href="7-credit.html"><button class="btn btn-default">Next</button></a>
+</p>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+</body>
+</html>

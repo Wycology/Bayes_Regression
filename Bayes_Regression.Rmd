@@ -1,0 +1,201 @@
+---
+title: "Bayesian Regression models in ethnobotany"
+author: "Cory Whitney"
+github: "CWWhitney"
+bibliography: 
+  - bib/packages.bib
+output: 
+  bookdown::gitbook:
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(base)
+library(bayesplot)
+library(bayestestR)
+library(broom)
+library(ethnobotanyR)
+library(insight)
+library(knitr)
+library(purrr)
+library(Rcpp)
+library(rmarkdown)
+library(rstan)
+library(rstanarm)
+library(stats)
+```
+
+```{r, warning=FALSE, include = FALSE}
+#Automatically write R library citation entries to a .bib file
+knitr::write_bib(c(.packages(), 
+                   'base',
+                   'bayesplot',
+                   'bayestestR', 
+                   'broom',
+                   'ethnobotanyR',
+                   'insight',
+                   'knitr',
+                   'purrr',
+                   'Rcpp',
+                   'rmarkdown',
+                   'rstanarm',
+                   'rstan',
+                   'stats'), 'bib/packages.bib')
+```
+
+# Data preparation
+
+For simplicity we simulate a data set with two numeric variables `proportion_used` and  `distance` and one categorical `Use_medicine`, with the target variable `abundance` of the plant species. This is similar to the data set we often use in the examples in the `ethnobotanyR` functions [@R-ethnobotanyR].
+
+```{r}
+  
+#simulate a 500 row ethnobotany data set with two uses
+seed <- set.seed(123)
+# Our target variable will be a numeric - total abundance of the species in the area (in 1000's)
+abundance <- sample(10.5:60.5, 500, rep = TRUE)
+# proportion of plant parts used for the medicinal use
+proportion_used <- sample(1.1:100, 500, rep = TRUE)
+# weighted distances to common harvesting sites (km)
+distance <- sample(0.1:5.5, 500, rep = TRUE)
+# Use variable (= 1 if used for the medicinal use and 0 otherwise)
+Use_medicine <- as.factor(sample(0:1, 500, rep = TRUE))
+# create the dataframe 
+eb_data <- data.frame(abundance, proportion_used, distance, Use_medicine)
+```
+
+Check `summary(eb_data)` for issues like missing values.
+
+## Regression
+
+We will compare two approaches to statistical inference:
+
+In the *frequentist approach* data sampled from a population is considered to be random and the population parameter values are considered fixed (but unknown), known as *null hypothesis*. To estimate that *null hypothesis* we look for the sample parameters that maximize the likelihood of the data known as *p-value*. If we get very small p-value we tend to reject the null hypothesis. 
+
+The *Bayesian approach*, in contrast, provides probabilities in an attempt to quantify the uncertainty about a certain hypothesis, but requires the use of a *prior* belief about how likely this hypothesis is to be true. The method then derives the probability of this hypothesis after seeing the data known as *posterior probability*. 
+
+# Classical linear regression model
+
+Now to highlight the difference between the Bayesian regression and the traditional linear regression (frequentist approach). We will first use the `lm` function from the `stats` package [@R-base] to fit a linear model our simulated data.
+
+```{r}
+model_freq <- lm(abundance~., data = eb_data)
+summary(model_freq)
+```
+
+Using the `p.value` of each regressor. Since the variable `Use_medicine` is categorical with two levels The coefficient of `Use_medicine1` is the difference between the abundance of the plant species where it is used (`1`) and that of the places where it is not used (`0`).
+
+# Bayesian regression
+
+We use the `stan_glm` from `rstanarm` [@R-rstanarm] to create a Bayesian generalized linear model via Stan [@R-rstan]. As with the linear regression above we use the `abundance~.` formula, i.e. `abundance` as the outcome variable of interest and all others as the regressors. The function will take our data and the priors to run a Markov chain Monte Carlo (MCMC). The prior distribution for the regression coefficients is kept in the default `prior = default_prior_coef(family)` for the `stan_glm` function in the `rstanarm` package [@R-rstanarm]. The default family for the prior is `gaussian`.
+
+```{r}
+ethno_bayes_model <- stan_glm(abundance~., data = eb_data, seed = seed)
+```
+
+Print the model with `print` function from base R [@R-base].
+
+```{r}
+print(ethno_bayes_model, digits = 3)
+```
+ 
+The Median estimate is the median computed from the simulation, and `MAD_SD` is the median absolute deviation computed from the same simulation. We can plot the simulation of each predictor using the `mcmc_dens` function from `bayesplot` [@R-bayesplot]. The function plots histograms from Markov chain Monte Carlo (MCMC) models. We can use `vline_at`, which is one of the `bayesplot-helpers` from `bayesplot`, to create a line on the plot to show the median.
+
+```{r}
+line<-median(eb_data$proportion_used)
+mcmc_dens(ethno_bayes_model, pars = c("proportion_used")) +
+  vline_at(0.031, col = "red")
+```
+The point estimate of `proportion_used` falls on the median of this distribution (red line). 
+
+```{r}
+mcmc_dens(ethno_bayes_model, pars=c("Use_medicine1")) +
+  vline_at(7.496, col="red")
+```
+
+```{r}
+mcmc_dens(ethno_bayes_model, pars=c("distance"))+
+  vline_at(-0.244, col="red")
+```
+Now how can we evaluate the model parameters? The answer is by analyzing the posteriors using some specific statistics. To get the full statistics provided by `bayestestR` library, we make use of the function `describe_posterior`.
+```{r}
+describe_posterior(ethno_bayes_model)
+```
+Possible multicollinearity between `distance` and `proportion_used` (r = 0.75). This might lead to inappropriate results. See 'Details' in `?rope`.
+ 
+Before starting analyzing the table we should first understanding the above various statistics commonly used in Bayesian regression.
+
+`CI` : Credible Interval, it is used to quantify the uncertainty about the regression coefficients. There are tow methods to compute CI, the highest density interval HDI which is the default, and the Equal-tailed Interval ETI. with 89% probability (given the data) that a coefficient lies above the `CI_low` value and under `CI_high` value. This strightforward probabilistic interpretation is completely diffrent from the confidence interval used in classical linear regression where the coefficient fall inside this confidence interval (if we choose 95% of confidence) 95 times if we repeat the study 100 times.
+
+`pd` : Probability of Direction, which is the probability that the effect goes to the positive or to the negative direction, and it is considered as the best equivalent for the p-value.
+
+`ROPE_CI`: Region of Practical Equivalence, since bayes method deals with true probabilities , it does not make sense to compute the probability of getting the effect equals zero (the null hypothesis) as a point (probability of a point in continuous intervals equal zero). Thus, we define instead a small range around zero which can be considered practically the same as no effect (zero), this range therefore is called ROPE. By default (according to Cohen, 1988) The Rope is [-0.1,0.1] from the standardized coefficients.
+
+`Rhat`: scale reduction factor $R^$, it is computed for each scalar quantity of interest, as the standard deviation of that quantity from all the chains included together, divided by the root mean square of the separate within-chain standard deviations. When this value is close to 1 we do not have any convergence problem with MCMC.
+
+`ESS` : effective sample size, it captures how many independent draws contain the same amount of information as the dependent sample obtained by the MCMC algorithm, the higher the ESS the better. The threshold used in practice is 400.
+
+Alternatively, we can get the coefficient estimates (which are the medians by default) separately by using the `get_parameters` function from the `insight` library [@R-insight].
+
+```{r}
+posterior_samples <- get_parameters(ethno_bayes_model)
+```
+
+Use the `print` from base R and the `map_dbl` function from the `purrr` library [@R-purrr] to show the results for the `posterior_samples` (the coefficients of the model).
+
+```{r}
+print(purrr::map_dbl(posterior_samples, median), digits = 3)
+```
+
+As we see the values are closer to each other due to the like normality of the distribution of the posteriors where all the central statistics (mean, median, mode) are closer to each other. Using the following plot to visualize the proportion_used coefficient using different statistics as follows
+```{r}
+mcmc_dens(ethno_bayes_model, pars = c("proportion_used"))+
+  vline_at(median(posterior_samples$proportion_used), col = "red")+
+  vline_at(mean(posterior_samples$proportion_used), col = "yellow")+
+  vline_at(map_estimate(posterior_samples$proportion_used), col="green")
+```
+As expected they are approximately on top of each other.
+
+# Bayesian inferences
+
+`hdi`: As we an alternative to the significance testing in classical regression (frequentist), we can test if the corresponding credible interval contains zero or not, if no then this coefficient can be considered important. Let's go back to our model and check the HDI of each coefficient.
+```{r}
+hdi(ethno_bayes_model)
+```
+
+Another way to test the significance by checking the part of the credible interval that falls inside the ROPE interval. we can get this by calling the rope from `bayestestR` library.
+```{r}
+rope(posterior_samples$proportion_used)
+```
+For `proportion_used` almost all the credible interval (HDI) is outside the ROPE range, which means that coefficient is highly significant.
+```{r}
+rope(posterior_samples$Use_medicine1)
+```
+ 
+```{r}
+ rope(posterior_samples$`(Intercept)`)
+```
+The same thing is true for the `Use_medicine` and `intercept` variable.
+```{r}
+rope(posterior_samples$distance)
+```
+In contrast, almost the quarter of the credible interval of distance variable is inside the ROPE interval. In other words, the probability of this coefficient to be zero is 23.28%.
+```{r}
+rope_range(ethno_bayes_model)
+```
+
+# PD and P-value
+
+Sometimes we are only interested to check the direction of the coefficient (positive or negative). this is the role of pd statistic in the above table, high value means that the associated effect is concentrated on the same side as the median. For our model, since pd's equal to 1, almost all the posteriors of the two variables proportion_used and `Use_medicine1` and the intercept are on the same side (if median negative all other values are negatives). However, it should be noted that this statistic does not assess the significance of the effect. Something more important to mention is that it exists a strong relation between this probability and the p-value approximated as follows: $𝑝−𝑣𝑎𝑙𝑢𝑒=1−𝑝𝑑$. let's check this with our variables.
+```{r }
+df1 <-dplyr::select(tidy(model_freq), c(term,p.value))
+df1$p.value <- round(df1$p.value, digits = 3)
+df2 <- 1- purrr::map_dbl(posterior_samples, p_direction)
+df <- cbind(df1,df2)
+```
+
+
+This document was generated with knitr [@R-knitr] and rmarkdown [@R-rmarkdown].
+
+# References
+ 

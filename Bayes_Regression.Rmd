@@ -51,6 +51,7 @@ For simplicity we simulate a data set with two numeric variables `proportion_use
 ```{r}
   
 #simulate a 500 row ethnobotany data set with two uses
+set.seed(123)
 seed <- set.seed(123)
 # Our target variable will be a numeric - total abundance of the species in the area (in 1000's)
 abundance <- sample(10.5:60.5, 500, rep = TRUE)

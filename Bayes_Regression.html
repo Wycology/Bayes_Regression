@@ -434,9 +434,9 @@ mcmc_dens(ethno_bayes_model, pars = c(&quot;proportion_used&quot;)) +
 <pre class="r"><code>rope_range(ethno_bayes_model)</code></pre>
 <pre><code>## [1] -1.449518  1.449518</code></pre>
 </div>
-<div id="pd-and-p-value" class="section level1">
-<h1>PD and P-value</h1>
-<p>Sometimes we are only interested in the direction of the coefficient (positive or negative). This is the role of the <code>pd</code> statistic in the above table. A high <code>pd</code> value means that the associated effect is concentrated on the same side as the median. This probability is closely related to the <code>p-value</code> $ p-value = 1 − pd$.</p>
+<div id="the-probability-of-direction-and-p-value" class="section level1">
+<h1>The Probability of Direction and p-value</h1>
+<p>Sometimes we are only interested in the direction of the coefficient (positive or negative). This is the role of the <code>pd</code> statistic in the above table. A high <code>pd</code> value means that the associated effect is concentrated on the same side as the median. This probability is closely related to the <code>p-value</code> (p-value = 1 − pd).</p>
 <pre class="r"><code>df1 &lt;-dplyr::select(tidy(model_freq), c(term, p.value))
 df1$p.value &lt;- round(df1$p.value, digits = 3)
 df2 &lt;- 1- purrr::map_dbl(posterior_samples, p_direction)

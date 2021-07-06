@@ -216,9 +216,9 @@ Some of the credible interval of distance variable is inside the ROPE interval. 
 rope_range(ethno_bayes_model)
 ```
 
-# PD and P-value
+# The Probability of Direction and p-value
 
-Sometimes we are only interested in the direction of the coefficient (positive or negative). This is the role of the `pd` statistic in the above table. A high `pd` value means that the associated effect is concentrated on the same side as the median. This probability is closely related to the `p-value` $ p-value = 1 − pd$. 
+Sometimes we are only interested in the direction of the coefficient (positive or negative). This is the role of the `pd` statistic in the above table. A high `pd` value means that the associated effect is concentrated on the same side as the median. This probability is closely related to the `p-value` (p-value = 1 − pd). 
 
 ```{r p-value-pd}
 df1 <-dplyr::select(tidy(model_freq), c(term, p.value))
